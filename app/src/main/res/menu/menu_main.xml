@@ -1,0 +1,23 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="cityfreqs.com.pilfershushbackscan.MainActivity">
+    <item
+        android:id="@+id/action_audio_beacons"
+        android:orderInCategory="10"
+        app:showAsAction="never"
+        android:title="@string/action_audio_beacons"/>
+
+    <item
+        android:id="@+id/action_override_scan"
+        android:orderInCategory="20"
+        app:showAsAction="never"
+        android:title="@string/action_override_scan"/>
+
+    <item
+        android:id="@+id/action_beacon_list"
+        android:orderInCategory="30"
+        app:showAsAction="never"
+        android:title="@string/action_beacon_list"/>
+
+</menu>

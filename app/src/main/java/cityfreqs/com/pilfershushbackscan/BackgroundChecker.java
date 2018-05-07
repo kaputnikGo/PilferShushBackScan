@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class BackgroundChecker {
+    private FileProcessor fileProcessor;
     private PackageManager packageManager;
     private List<ApplicationInfo> packages;
     private PackageInfo packageInfo;
@@ -41,6 +42,10 @@ public class BackgroundChecker {
                     "silverpush",
                     "sonicnotify"
             };
+
+    public BackgroundChecker(FileProcessor fileProcessor) {
+        this.fileProcessor = fileProcessor;
+    }
 
     protected boolean initChecker(PackageManager packageManager) {
         // need a user updatable SDK_NAMES list insert...
@@ -204,8 +209,8 @@ public class BackgroundChecker {
         // only lists apps with declared AudioRecord/Mic permission...
         // need to check for runonce...
         //TODO
-        // getSystemAvailableFeatures()
-        // hasSystemFeature(String name)
+        // PackageManager.getSystemAvailableFeatures() - list all features
+        // PackageManager.hasSystemFeature(String name) - search for specific ie: "FEATURE_MICROPHONE"
 
         packages = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
         int idCounter = 0;

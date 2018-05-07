@@ -18,6 +18,8 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "PilferShush_BackScan";
     public static final String VERSION = "1.0.01";
+
+    private FileProcessor fileProcessor;
     private BackgroundChecker backgroundChecker;
     private static TextView debugText;
     private AlertDialog.Builder dialogBuilder;
@@ -43,7 +45,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         // just do it...
-        backgroundChecker = new BackgroundChecker();
+        fileProcessor = new FileProcessor(this);
+        backgroundChecker = new BackgroundChecker(fileProcessor);
 
         if (runBackgroundChecks()) {
             // report

@@ -69,6 +69,7 @@ public class MainActivity extends AppCompatActivity {
             //TODO
             // this function is of concern as it may not work, uses logcat
             // may bot be useful here as its intention is to trip up RECORD_AUDIO detection
+            // therefore would need the mic checking function
             backgroundChecker.auditLogAsync();
 
         }
@@ -134,7 +135,8 @@ public class MainActivity extends AppCompatActivity {
         // current matching method uses:
         // Returns true if and only if this string contains the specified sequence of char values.
         // if (name.contains(SDK_NAMES[i])) {}
-
+        entryLogger("\nCurrent list of Audio beacon SDK names searched for: \n"
+                + backgroundChecker.displayAudioSdkNames(), false);
     }
 
 /*

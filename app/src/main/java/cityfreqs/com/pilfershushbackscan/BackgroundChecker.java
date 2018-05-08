@@ -31,17 +31,8 @@ public class BackgroundChecker {
     private static final String RECORD_PERMISSION = "RECORD_AUDIO";
     private static final String BOOT_PERMISSION = "RECEIVE_BOOT_COMPLETED";
 
-    // TODO alphabetical list of package names
-    // move to raw/textfile populate
-    private static final String[] AUDIO_SDK_NAMES =
-            {
-                    "fidzup",
-                    "lisnr",
-                    "shopkick",
-                    "signal360",
-                    "silverpush",
-                    "sonicnotify"
-            };
+    private static String[] AUDIO_SDK_NAMES;
+    private static String[] USER_SDK_NAMES;
 
     public BackgroundChecker(FileProcessor fileProcessor) {
         this.fileProcessor = fileProcessor;
@@ -53,7 +44,33 @@ public class BackgroundChecker {
         appEntries = new ArrayList<>();
         audioAppEntries = new ArrayList<>();
         audioBeaconAppEntries = new ArrayList<>();
-        return true;
+
+        // populate audio_sdk_names
+        AUDIO_SDK_NAMES = fileProcessor.getAudioSdkArray();
+        if (AUDIO_SDK_NAMES != null && AUDIO_SDK_NAMES.length > 0) {
+            return true;
+        }
+        else {
+            // error in loading sdk names file
+            return false;
+        }
+    }
+
+    protected boolean loadUSerSdkNames() {
+        USER_SDK_NAMES = fileProcessor.getUserSdkArray();
+        if (USER_SDK_NAMES != null) {
+            if (USER_SDK_NAMES.length > 0) {
+                return true;
+            }
+            else {
+                // exists but has no entries
+                return false;
+            }
+        }
+        else {
+            // error, user does not exist
+            return false;
+        }
     }
 
     protected void destroy() {
@@ -70,14 +87,40 @@ public class BackgroundChecker {
      *
      */
     public static boolean isSdkName(String nameQuery) {
-        for (String name : AUDIO_SDK_NAMES) {
-            if (nameQuery.contains(name))
-                return true;
+        // check file loaded first
+        if (AUDIO_SDK_NAMES != null && AUDIO_SDK_NAMES.length > 0) {
+            for (String name : AUDIO_SDK_NAMES) {
+                if (nameQuery.contains(name))
+                    return true;
+            }
+        }
+        return false;
+    }
+    //TODO
+    public static boolean isUserSdkName(String nameQuery) {
+        // check file loaded first
+        if (USER_SDK_NAMES != null && USER_SDK_NAMES.length > 0) {
+            for (String name : USER_SDK_NAMES) {
+                if (nameQuery.contains(name))
+                    return true;
+            }
         }
         return false;
     }
 
     /********************************************************************/
+
+    protected String displayAudioSdkNames() {
+        // return a string of names + \n
+        if (AUDIO_SDK_NAMES != null && AUDIO_SDK_NAMES.length > 0) {
+            StringBuilder sb = new StringBuilder();
+            for(int i = 0; i < AUDIO_SDK_NAMES.length; i++) {
+                sb.append(AUDIO_SDK_NAMES[i] + "\n");
+            }
+            return sb.toString();
+        }
+        return "error: none found \n";
+    }
 
     protected int getUserRecordNumApps() {
         if (audioAppEntries != null) {
@@ -91,7 +134,7 @@ public class BackgroundChecker {
         if (appEntries.size() > 0) {
             for (AppEntry appEntry : appEntries) {
                 //TODO
-                //MainActivity.entryLogger(appEntry.toString(), appEntry.checkForCaution());
+                MainActivity.entryLogger(appEntry.toString(), appEntry.checkForCaution());
             }
         }
     }
@@ -170,10 +213,12 @@ public class BackgroundChecker {
 // if find one instance return true
 
     private boolean checkForAudioBeaconService(String[] serviceNames) {
-        for (String name: serviceNames) {
-            for (int i = 0; i < AUDIO_SDK_NAMES.length; i++) {
-                if (name.contains(AUDIO_SDK_NAMES[i])) {
-                    return true;
+        if (AUDIO_SDK_NAMES != null && AUDIO_SDK_NAMES.length > 0) {
+            for (String name : serviceNames) {
+                for (int i = 0; i < AUDIO_SDK_NAMES.length; i++) {
+                    if (name.contains(AUDIO_SDK_NAMES[i])) {
+                        return true;
+                    }
                 }
             }
         }
@@ -271,8 +316,8 @@ public class BackgroundChecker {
 
     protected void auditLogAsync() {
         //TODO
-        // this may not work for logic reasons, and
-        // cos in JB (API 16) up can only access this activity's log entries... ??
+        // this may not work
+        // in JB (API 16) up can only access this activity's log entries... ??
         // therefore, it can only find when we provoke the exception
         // and even then its up to specific device implementations to allow logcat
 

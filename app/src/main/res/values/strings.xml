@@ -15,7 +15,7 @@
     <string name="dialog_audio_beacon_apps">Audio Beacon List</string>
     <string name="action_override_scan">Scan User App</string>
     <string name="dialog_override_scan_apps">Scan Apps List</string>
-    <string name="action_beacon_list">Beacon SDK list</string>
+    <string name="action_beacon_list">Display beacon SDK list</string>
     <string name="dialog_beacon_list_sdks_">Audio Beacon SDK list</string>
 
 

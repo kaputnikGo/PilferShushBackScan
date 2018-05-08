@@ -25,7 +25,7 @@ public class FileProcessor {
                 return audioSdkArray;
             }
             else {
-                // bad errors in finding and loading internal sdk list
+                // error in finding and loading internal sdk list
                 return null;
             }
         }
@@ -37,7 +37,7 @@ public class FileProcessor {
                 return audioSdkArray;
             }
             else {
-                // bad errors in finding and loading internal sdk list
+                // error in finding and loading internal sdk list
                 return null;
             }
         }
@@ -103,6 +103,7 @@ public class FileProcessor {
 
     private boolean loadUserSdkList() {
         // may consist of package names that aren't audio beacon types, ie trackers etc.
+        // may also be empty, ie unused
         try {
             InputStream userSdkInput = context.getResources().openRawResource(R.raw.user_sdk_names);
             BufferedReader userSdkStream = new BufferedReader(new InputStreamReader(userSdkInput));

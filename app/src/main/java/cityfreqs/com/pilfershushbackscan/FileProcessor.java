@@ -1,16 +1,28 @@
 package cityfreqs.com.pilfershushbackscan;
 
 import android.content.Context;
+import android.os.Environment;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 
 public class FileProcessor {
     private Context context;
     private String[] audioSdkArray;
     private String[] userSdkArray;
+
+    private static final String AUDIO_SDK_FILE_NAME = "audio_sdk_names.txt";
+    private static final String USER_SDK_FILE_NAME = "user_sdk_names.txt";
+    private static final String APP_DIRECTORY_NAME = "BackScan";
+    private File extDirectory;
+    private File userFile;
 
     protected FileProcessor(Context context) {
         this.context = context;
@@ -45,32 +57,48 @@ public class FileProcessor {
 
     protected String[] getUserSdkArray() {
         // the user list may not exist
-        //TODO fix the logic here
-        if (userSdkArray == null) {
-            // maybe not created yet...
-            if (loadUserSdkList()) {
-                return userSdkArray;
-            }
-            else {
-                // no finding and loading user sdk list
-                return null;
-            }
-        }
-        else if (userSdkArray.length > 0)
+        // reset anyway
+        userSdkArray = null;
+        if (loadUserSdkList()) {
             return userSdkArray;
-        else {
-            // no list made, trigger it
-            if (loadUserSdkList()) {
-                return userSdkArray;
-            }
-            else {
-                // error in finding and loading internal sdk list
-                return null;
-            }
         }
+        // no finding and loading user sdk list
+        return null;
     }
 
+    protected boolean addUserSdkName(String newName) {
+        // editText class has android:digits that should sanity the input to [a-zA-Z0-9_]
+        // check for empty
+        if (newName == null || newName.isEmpty()) {
+            return false;
+        }
+        if (checkUserSdkNameExists(newName)) {
+            MainActivity.entryLogger("Name already exists: " + newName, true);
+            return false;
+        }
 
+        return writeUserSdkName(newName);
+    }
+
+    protected boolean checkUserSdkNameExists(String checkName) {
+        // check file loaded first
+        if (loadUserSdkList()) {
+            for (String name : userSdkArray) {
+                if (name.contains(checkName))
+                    return true;
+            }
+        }
+        return false;
+    }
+
+    protected boolean deleteUserSdkFile() {
+        return deleteUserFile();
+    }
+
+/*
+
+
+ */
 
     private boolean loadAudioSdkList() {
         // BackScan internal list of audio beacon sdk package names
@@ -104,8 +132,21 @@ public class FileProcessor {
     private boolean loadUserSdkList() {
         // may consist of package names that aren't audio beacon types, ie trackers etc.
         // may also be empty, ie unused
+        // grab the file.
+        if (!accessWriteDirectory()) {
+            return false;
+        }
+        File location = extDirectory;
+        if (location == null) {
+            // error
+            MainActivity.entryLogger("USER_SDK file location null.", true);
+            return false;
+        }
+
+
         try {
-            InputStream userSdkInput = context.getResources().openRawResource(R.raw.user_sdk_names);
+            userFile = new File(location, USER_SDK_FILE_NAME);
+            FileInputStream userSdkInput = new FileInputStream(userFile);
             BufferedReader userSdkStream = new BufferedReader(new InputStreamReader(userSdkInput));
 
             ArrayList<String> userSdkList = new ArrayList<>();
@@ -131,5 +172,72 @@ public class FileProcessor {
         }
     }
 
+    private boolean writeUserSdkName(String newName) {
+        if (accessWriteDirectory()) {
+            // grab the file.
+            File location = extDirectory;
+            if (location == null) {
+                // error
+                MainActivity.entryLogger("USER_SDK file location error.", true);
+                return false;
+            }
+
+            try {
+                userFile = new File(location, USER_SDK_FILE_NAME);
+                if (!userFile.exists()) {
+                    userFile.createNewFile();
+                }
+
+                FileOutputStream outStream = new FileOutputStream(userFile, true);
+                OutputStreamWriter outWriter = new OutputStreamWriter(outStream);
+                outWriter.append(newName);
+                outWriter.append("\n");
+
+                outWriter.close();
+                outStream.flush();
+                outStream.close();
+                return true;
+            }
+            catch (IOException ex) {
+                // error
+                MainActivity.entryLogger("Error writing to USER_SDK file.", true);
+                return false;
+            }
+        }
+        else {
+            // error with external storage
+            MainActivity.entryLogger("Error with access to external storage.", true);
+            return false;
+        }
+    }
+
+    private boolean deleteUserFile() {
+        if (accessWriteDirectory()) {
+            // grab the file.
+            File location = extDirectory;
+            if (location == null) {
+                // error
+                MainActivity.entryLogger("USER_SDK file location error.", true);
+                return false;
+            }
+            new File(location, USER_SDK_FILE_NAME).delete();
+            return true;
+        }
+        return false;
+    }
+
+    private boolean accessWriteDirectory() {
+        if (Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+            extDirectory = new File(Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DOWNLOADS), APP_DIRECTORY_NAME);
+            if (!extDirectory.exists()) {
+                extDirectory.mkdirs();
+            }
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 
 }

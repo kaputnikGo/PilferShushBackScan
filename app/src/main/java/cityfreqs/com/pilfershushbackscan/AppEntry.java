@@ -15,6 +15,7 @@ public class AppEntry {
     private boolean receivers;
     private boolean services;
     private boolean caution;
+    private boolean audioBeacon;
 
     private int servicesNum;
     private int receiversNum;
@@ -39,6 +40,7 @@ public class AppEntry {
         receivers = false;
         services = false;
         caution = false;
+        audioBeacon = false;
         servicesNum = 0;
         receiversNum = 0;
         permissionsNum = 0;
@@ -118,24 +120,48 @@ public class AppEntry {
         return caution;
     }
 
+    public void setAudioBeacon(boolean audioBeacon) {
+        this.audioBeacon = audioBeacon;
+    }
+
+    public boolean getAudioBeacon() {
+        return audioBeacon;
+    }
+
     public boolean checkBeaconServiceNames() {
-        return beaconServices.length > 0;
+        if (beaconServices != null)
+            return beaconServices.length > 0;
+        else
+            return false;
     }
 
     public int getBeaconServiceNamesNum() {
-        return beaconServices.length;
+        if (beaconServices != null)
+            return beaconServices.length;
+        else
+            return 0;
     }
 
     public String[] getBeaconServiceNames() {
-        return beaconServices;
+        //TODO better the return
+        if (beaconServices != null)
+            return beaconServices;
+        else
+            return null;
     }
 
     public boolean checkBeaconReceiverNames() {
-        return beaconReceivers.length > 0;
+        if (beaconReceivers != null)
+            return beaconReceivers.length > 0;
+        else
+            return false;
     }
 
     public int getBeaconReceiverNamesNum() {
-        return beaconReceivers.length;
+        if (beaconReceivers != null)
+            return beaconReceivers.length;
+        else
+            return 0;
     }
 
     public String[] getBeaconReceiverNames() {
@@ -176,7 +202,8 @@ public class AppEntry {
     public String toString() {
         return idNum + " : " + activityName + "\n" + packageName + "\nRECORD: " + recordable +
                 "\nBOOT: " + bootCheck + "\nSERVICES: " + services +
-                "\nRECEIVERS: " + receivers + "\n--------------------------------------\n";
+                "\nRECEIVERS: " + receivers + "\nBEACON SDK: " + audioBeacon +
+                "\n--------------------------------------\n";
     }
 
     // also has:
@@ -184,7 +211,7 @@ public class AppEntry {
     // .processName
     // .permission
     public String[] getServiceNames() {
-        String[] beaconServices = new String[serviceInfo.length];
+        beaconServices = new String[serviceInfo.length];
         int i = 0;
 
         String[] names = new String[serviceInfo.length];
@@ -205,7 +232,7 @@ public class AppEntry {
     // .processName
     // .targetActivity
     public String[] getReceiverNames() {
-        String[] beaconReceivers = new String[receiversInfo.length];
+        beaconReceivers = new String[receiversInfo.length];
         int i = 0;
 
         String[] names = new String[receiversInfo.length];

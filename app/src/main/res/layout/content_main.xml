@@ -11,7 +11,7 @@
     <TextView
         android:id="@+id/debug_text"
         android:layout_width="match_parent"
-        android:layout_height="410dp"
+        android:layout_height="match_parent"
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:background="#000000"

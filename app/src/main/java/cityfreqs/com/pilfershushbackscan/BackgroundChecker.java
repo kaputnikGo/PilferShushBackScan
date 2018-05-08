@@ -18,8 +18,7 @@ public class BackgroundChecker {
     private List<ApplicationInfo> packages;
     private PackageInfo packageInfo;
     private ArrayList<AppEntry> appEntries;
-    private ArrayList<AppEntry> audioAppEntries;
-    private ArrayList<AppEntry> audioBeaconAppEntries;
+    private int audioBeaconCount;
 
     // needs to check for :
     // " android.Manifest.permission.* "
@@ -36,14 +35,13 @@ public class BackgroundChecker {
 
     public BackgroundChecker(FileProcessor fileProcessor) {
         this.fileProcessor = fileProcessor;
+        appEntries = new ArrayList<>();
+        audioBeaconCount = 0;
     }
 
     protected boolean initChecker(PackageManager packageManager) {
         // need a user updatable SDK_NAMES list insert...
         this.packageManager = packageManager;
-        appEntries = new ArrayList<>();
-        audioAppEntries = new ArrayList<>();
-        audioBeaconAppEntries = new ArrayList<>();
 
         // populate audio_sdk_names
         AUDIO_SDK_NAMES = fileProcessor.getAudioSdkArray();
@@ -56,7 +54,9 @@ public class BackgroundChecker {
         }
     }
 
-    protected boolean loadUSerSdkNames() {
+    protected boolean loadUserSdkNames() {
+        USER_SDK_NAMES = null;
+
         USER_SDK_NAMES = fileProcessor.getUserSdkArray();
         if (USER_SDK_NAMES != null) {
             if (USER_SDK_NAMES.length > 0) {
@@ -78,8 +78,6 @@ public class BackgroundChecker {
         if (packages != null) packages = null;
         if (packageInfo != null) packageInfo = null;
         if (appEntries != null) appEntries = null;
-        if (audioAppEntries != null) audioAppEntries = null;
-        if (audioBeaconAppEntries != null) audioBeaconAppEntries = null;
     }
 
     /********************************************************************/
@@ -99,6 +97,7 @@ public class BackgroundChecker {
     //TODO
     public static boolean isUserSdkName(String nameQuery) {
         // check file loaded first
+
         if (USER_SDK_NAMES != null && USER_SDK_NAMES.length > 0) {
             for (String name : USER_SDK_NAMES) {
                 if (nameQuery.contains(name))
@@ -122,9 +121,25 @@ public class BackgroundChecker {
         return "error: none found \n";
     }
 
+    protected String displayUserSdkNames() {
+        if (loadUserSdkNames()) {
+            StringBuilder sb = new StringBuilder();
+            for(int i = 0; i < USER_SDK_NAMES.length; i++) {
+                sb.append(USER_SDK_NAMES[i] + "\n");
+            }
+            return sb.toString();
+        }
+        return "no user SDK names found.";
+    }
+
     protected int getUserRecordNumApps() {
-        if (audioAppEntries != null) {
-            return audioAppEntries.size();
+        // count number with getRecordable == true
+        int count = 0;
+        if (appEntries != null) {
+            for (AppEntry appEntry : appEntries) {
+                if (appEntry.getRecordable()) count ++;
+            }
+            return count;
         }
         else
             return 0;
@@ -171,40 +186,43 @@ public class BackgroundChecker {
         return appEntries.get(appEntryIndex);
     }
 
+    protected boolean hasAudioBeaconApps() {
+        return audioBeaconCount > 0;
+    }
+
     protected boolean checkAudioBeaconApps() {
-        // while we check, populate audioBeaconAppEntries list for later use
-        audioBeaconAppEntries = new ArrayList<>();
+        audioBeaconCount = 0;
+        int indexCount = 0;
         if (appEntries.size() > 0) {
             for (AppEntry appEntry : appEntries) {
                 if (appEntry.getServices() == true) {
                     // have services, check for audioBeacon names
                     if (checkForAudioBeaconService(appEntry.getServiceNames()) == true) {
-                        // have a substring match
-                        audioBeaconAppEntries.add(appEntry);
+                        // have a substring match, set original
+                        appEntries.get(indexCount).setAudioBeacon(true);
+                        audioBeaconCount++;
                     }
                 }
+                indexCount++;
             }
         }
-        if (audioBeaconAppEntries.size() > 0) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return audioBeaconCount > 0;
     }
 
     protected String[] getAudioBeaconAppNames() {
-        String[] appNames = new String[audioBeaconAppEntries.size()];
-        int i = 0;
-        for (AppEntry appEntry : audioBeaconAppEntries) {
-            appNames[i] = appEntry.getActivityName();
-            i++;
+        if (audioBeaconCount > 0) {
+            String[] appNames = new String[audioBeaconCount];
+            int i = 0;
+            for (AppEntry appEntry : appEntries) {
+                if (appEntry.getAudioBeacon()) {
+                    appNames[i] = appEntry.getActivityName();
+                    i++;
+                }
+            }
+            return appNames;
         }
-        return appNames;
-    }
-
-    protected AppEntry getAudioBeaconAppEntry(int appEntryIndex) {
-        return audioBeaconAppEntries.get(appEntryIndex);
+        else
+            return null;
     }
 
 
@@ -301,10 +319,6 @@ public class BackgroundChecker {
                     //add to list
                     appEntry.setIdNum(idCounter);
                     appEntries.add(appEntry);
-                    // also add to this list
-                    if (appEntry.getRecordable()) {
-                        audioAppEntries.add(appEntry);
-                    }
                     idCounter++;
                 }
             }

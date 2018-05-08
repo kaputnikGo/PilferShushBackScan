@@ -1,23 +1,32 @@
 package cityfreqs.com.pilfershushbackscan;
 
+import android.Manifest;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Spannable;
 import android.text.method.ScrollingMovementMethod;
 import android.text.style.ForegroundColorSpan;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity
+        implements ActivityCompat.OnRequestPermissionsResultCallback {
 
     private static final String TAG = "PilferShush_BackScan";
     public static final String VERSION = "1.0.01";
+    private static final int REQUEST_WRITE_PERMISSION = 1;
 
     private FileProcessor fileProcessor;
     private BackgroundChecker backgroundChecker;
@@ -44,10 +53,29 @@ public class MainActivity extends AppCompatActivity {
                 debugText.setSoundEffectsEnabled(false); // no further click sounds
             }
         });
-        // just do it...
+
         fileProcessor = new FileProcessor(this);
         backgroundChecker = new BackgroundChecker(fileProcessor);
 
+        // runtime permissions for external storage write for user SDK names
+        if (android.os.Build.VERSION.SDK_INT > android.os.Build.VERSION_CODES.LOLLIPOP) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) {
+                // Permission is not granted
+                ActivityCompat.requestPermissions(this,
+                        new String[]{ Manifest.permission.WRITE_EXTERNAL_STORAGE },
+                        REQUEST_WRITE_PERMISSION);
+            }
+            else {
+                appStart();
+            }
+        }
+        else {
+            appStart();
+        }
+    }
+
+    private void appStart() {
         if (runBackgroundChecks()) {
             // report
             int audioNum = getAudioRecordAppsNumber();
@@ -76,6 +104,27 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_WRITE_PERMISSION: {
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    appStart();
+                }
+                else {
+                    // Permission Denied
+                    Toast.makeText(MainActivity.this, getResources().getString(R.string.perms_state_1), Toast.LENGTH_SHORT)
+                            .show();
+                    // start anyway, with reduced function
+                    appStart();
+                }
+                return;
+            }
+        }
+    }
+
+    @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
@@ -88,14 +137,17 @@ public class MainActivity extends AppCompatActivity {
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         switch(item.getItemId()) {
-            case R.id.action_audio_beacons:
-                hasAudioBeaconAppsList();
-                return true;
             case R.id.action_override_scan:
                 hasUserAppsList();
                 return true;
             case R.id.action_beacon_list:
                 displayBeaconSdkList();
+                return true;
+            case R.id.action_user_entry:
+                addUserSdkList();
+                return true;
+            case R.id.action_delete_entry:
+                deleteUserSdkList();
                 return true;
             default:
                 // do not consume the action
@@ -109,13 +161,10 @@ public class MainActivity extends AppCompatActivity {
         return backgroundChecker.getUserRecordNumApps();
     }
     protected boolean hasAudioBeaconApps() {
-        return backgroundChecker.checkAudioBeaconApps();
+        return backgroundChecker.hasAudioBeaconApps();
     }
     protected int getAudioBeaconAppNumber() {
         return backgroundChecker.getAudioBeaconAppNames().length;
-    }
-    protected String[] getAudioBeaconAppList() {
-        return backgroundChecker.getAudioBeaconAppNames();
     }
 
     protected boolean runBackgroundChecks() {
@@ -132,11 +181,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     protected void displayBeaconSdkList() {
-        // current matching method uses:
-        // Returns true if and only if this string contains the specified sequence of char values.
-        // if (name.contains(SDK_NAMES[i])) {}
-        entryLogger("\nCurrent list of Audio beacon SDK names searched for: \n"
+        entryLogger("\n" + getResources().getString(R.string.main_scanner_2) + "\n"
                 + backgroundChecker.displayAudioSdkNames(), false);
+        // add any user names
+        entryLogger(backgroundChecker.displayUserSdkNames() + "\n", false);
     }
 
 /*
@@ -149,31 +197,14 @@ public class MainActivity extends AppCompatActivity {
 
         entryLogger(getResources().getString(R.string.background_scan_3) + backgroundChecker.getUserRecordNumApps() + "\n", false);
 
+        backgroundChecker.checkAudioBeaconApps();
+
         backgroundChecker.audioAppEntryLog();
-    }
-
-    private void listAppAudioBeaconDetails(int selectedIndex) {
-        if (backgroundChecker.getAudioBeaconAppEntry(selectedIndex).checkBeaconServiceNames()) {
-            entryLogger(getResources().getString(R.string.background_scan_4)
-                    + backgroundChecker.getAudioBeaconAppEntry(selectedIndex).getActivityName()
-                    + ": " + backgroundChecker.getAudioBeaconAppEntry(selectedIndex).getBeaconServiceNamesNum(), true);
-
-            logAppEntryInfo(backgroundChecker.getAudioBeaconAppEntry(selectedIndex).getBeaconServiceNames());
-        }
-        //TODO
-        // add a call for any receiver names too
-        if (backgroundChecker.getAudioBeaconAppEntry(selectedIndex).checkBeaconReceiverNames()) {
-            entryLogger(getResources().getString(R.string.background_scan_5)
-                    + backgroundChecker.getAudioBeaconAppEntry(selectedIndex).getActivityName()
-                    + ": " + backgroundChecker.getAudioBeaconAppEntry(selectedIndex).getBeaconReceiverNamesNum(), true);
-
-            logAppEntryInfo(backgroundChecker.getAudioBeaconAppEntry(selectedIndex).getBeaconReceiverNames());
-        }
     }
 
     private void listAppOverrideScanDetails(int selectedIndex) {
         // check for receivers too?
-        entryLogger(getResources().getString(R.string.background_scan_6)
+        entryLogger("\n" + getResources().getString(R.string.background_scan_6)
                 + backgroundChecker.getOverrideScanAppEntry(selectedIndex).getActivityName()
                 + ": " + backgroundChecker.getOverrideScanAppEntry(selectedIndex).getServicesNum(), true);
 
@@ -197,29 +228,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
-    private void hasAudioBeaconAppsList() {
-        String[] appNames = getAudioBeaconAppList();
-
-        if (appNames != null && appNames.length > 0) {
-            // proceed to list
-            dialogBuilder = new AlertDialog.Builder(this);
-            dialogBuilder.setItems(appNames, new DialogInterface.OnClickListener() {
-                public void onClick(DialogInterface dialogInterface, int which) {
-                    // index position of clicked app name
-                    listAppAudioBeaconDetails(which);
-                }
-            });
-            dialogBuilder.setTitle(R.string.dialog_audio_beacon_apps);
-            alertDialog = dialogBuilder.create();
-            alertDialog.show();
-        }
-        else {
-            // none found, inform user
-            entryLogger(getResources().getString(R.string.audio_apps_check_1), true);
-        }
-    }
-
     private void hasUserAppsList() {
         String[] appNames = backgroundChecker.getOverrideScanAppNames();
 
@@ -240,6 +248,60 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void addUserSdkList() {
+        dialogBuilder = new AlertDialog.Builder(this);
+        LayoutInflater inflater = this.getLayoutInflater();
+        View inputView = inflater.inflate(R.layout.add_sdk_name, null);
+        dialogBuilder.setView(inputView);
+        final EditText userInput = (EditText) inputView.findViewById(R.id.add_sdk_name_input);
+
+        dialogBuilder
+                .setCancelable(false)
+                .setPositiveButton(R.string.dialog_button_save, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        if (fileProcessor.addUserSdkName(userInput.getText().toString())) {
+
+                            entryLogger("New SDK name added.", false);
+                        }
+                        else {
+                            entryLogger("Failed to add new SDK name.", true);
+                        }
+                    }
+                })
+                .setNegativeButton(R.string.dialog_button_cancel, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int id) {
+                        // dismissed
+                        alertDialog.cancel();
+                    }
+                });
+        alertDialog = dialogBuilder.create();
+        alertDialog.show();
+    }
+
+    private void deleteUserSdkList() {
+        // deletes the whole file
+        dialogBuilder = new AlertDialog.Builder(this);
+        dialogBuilder.setPositiveButton(R.string.dialog_button_okay, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                if (fileProcessor.deleteUserSdkFile()) {
+                    entryLogger("User added SDK file deleted.", false);
+                }
+                else {
+                    entryLogger("Error deleting user sdk file.", true);
+                }
+            }
+        });
+        dialogBuilder.setNegativeButton(R.string.dialog_button_cancel, new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int id) {
+                // User cancelled the dialog
+                alertDialog.cancel();
+            }
+        });
+        alertDialog = dialogBuilder.create();
+        alertDialog.show();
+    }
 
 /*
 

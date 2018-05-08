@@ -2,8 +2,10 @@
     <string name="app_name">BackScan</string>
     <string name="action_settings">Settings</string>
 
-    <string name="background_scan_1">Background scanner fail.</string>
-    <string name="background_scan_2">run background checks...</string>
+    <string name="perms_state_1">Write permission denied, will not be able to add SDK names.</string>
+
+    <string name="background_scan_1">Background Scanner fail.</string>
+    <string name="background_scan_2">run BackScan checks...</string>
     <string name="background_scan_3">User Apps with RECORD AUDIO:\u0020</string>
     <string name="background_scan_4">Found audio beacon services for\u0020</string>
     <string name="background_scan_5">Found audio beacon receivers for\u0020</string>
@@ -11,20 +13,28 @@
     <string name="background_scan_7">Found User App receivers for\u0020</string>
     <string name="background_scan_8">AppEntry list:\u0020</string>
 
-    <string name="action_audio_beacons">Check Beacon Apps</string>
-    <string name="dialog_audio_beacon_apps">Audio Beacon List</string>
-    <string name="action_override_scan">Scan User App</string>
+    <string name="action_override_scan">Scan Apps List</string>
     <string name="dialog_override_scan_apps">Scan Apps List</string>
-    <string name="action_beacon_list">Display beacon SDK list</string>
-    <string name="dialog_beacon_list_sdks_">Audio Beacon SDK list</string>
+    <string name="action_beacon_list">Display SDK list</string>
+    <string name="dialog_beacon_list_sdks_">SDK list</string>
+    <string name="action_user_entry">Add SDK name</string>
+    <string name="dialog_user_add_sdk">Add SDK package name (max 20 chars.):</string>
+    <string name="dialog_user_add_sdk_hint">package name</string>
+    <string name="action_delete_entry">Delete user SDKs</string>
+    <string name="dialog_delete_user_entry_file">delete the user added SDK list</string>
 
 
     <string name="audio_apps_check_1">NO AUDIO BEACON APPS FOUND.</string>
     <string name="user_apps_check_1">NO USER APPS FOUND FOR OVERRIDE SCAN.</string>
 
+    <string name="main_scanner_2">Default list of SDK names searched:\u0020</string>
     <string name="main_scanner_3">Record audio apps found:\u0020</string>
     <string name="main_scanner_4">No record audio apps found.</string>
     <string name="main_scanner_5">\u0020Audio Beacon SDKs detected.</string>
     <string name="main_scanner_6">No Audio Beacon SDKs detected.</string>
+
+    <string name="dialog_button_save">Save</string>
+    <string name="dialog_button_cancel">Cancel</string>
+    <string name="dialog_button_okay">OK</string>
 
 </resources>

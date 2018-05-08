@@ -1,6 +1,0 @@
-fidzup
-lisnr
-shopkick
-signal360
-silverpush
-sonicnotify
